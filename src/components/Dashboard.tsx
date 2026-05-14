@@ -5,6 +5,7 @@ import { loadTasks, saveTasks, loadCompletions, loadColors, createTask, toggleCo
 import { shouldShowToday, getTodayString } from '../lib/taskUtils'
 import { TaskCard } from './TaskCard'
 import { TaskForm } from './TaskForm'
+import { CategoryForm } from './CategoryForm'
 import { CalendarView } from './CalendarView'
 import { CategoryPage } from './CategoryPage'
 import { SettingsPage } from './SettingsPage'
@@ -23,7 +24,8 @@ export function Dashboard() {
   const [showSettings, setShowSettings] = useState(false)
 
   // フォーム状態
-  const [showForm, setShowForm] = useState(false)
+  type FormMode = 'task' | 'category' | null
+  const [formMode, setFormMode] = useState<FormMode>(null)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [initialParent, setInitialParent] = useState<Task | null>(null)
 
@@ -52,16 +54,29 @@ export function Dashboard() {
     setCompletions(toggleCompletion(task.id, today))
   }
 
-  const openNew = (parent: Task | null = null) => {
+  const openNewTask = (parent: Task | null = null) => {
     setEditingTask(null)
     setInitialParent(parent)
-    setShowForm(true)
+    setFormMode('task')
+  }
+
+  const openNewCategory = () => {
+    setEditingTask(null)
+    setInitialParent(null)
+    setFormMode('category')
   }
 
   const openEdit = (task: Task) => {
     setEditingTask(task)
     setInitialParent(null)
-    setShowForm(true)
+    // カテゴリーページからの編集かどうかで使うフォームを切り替え
+    setFormMode(task.parent_id === null ? 'category' : 'task')
+  }
+
+  const closeForm = () => {
+    setFormMode(null)
+    setEditingTask(null)
+    setInitialParent(null)
   }
 
   const handleSave = (data: Omit<Task, 'id' | 'created_at'>) => {
@@ -73,9 +88,7 @@ export function Dashboard() {
       all.push(createTask(data))
     }
     saveTasks(all)
-    setShowForm(false)
-    setEditingTask(null)
-    setInitialParent(null)
+    closeForm()
     refresh()
   }
 
@@ -178,10 +191,10 @@ export function Dashboard() {
           <CategoryPage
             tasks={tasks}
             colors={colors}
-            onAddRoot={() => openNew(null)}
+            onAddRoot={openNewCategory}
             onEdit={openEdit}
             onDelete={handleDelete}
-            onAddChild={parent => openNew(parent)}
+            onAddChild={parent => openNewTask(parent)}
           />
         )}
 
@@ -211,21 +224,31 @@ export function Dashboard() {
 
       {/* FAB */}
       <button
-        onClick={() => openNew(null)}
+        onClick={() => openNewTask(null)}
         className="fixed bottom-6 right-6 w-14 h-14 bg-indigo-500 hover:bg-indigo-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all active:scale-95"
       >
         <Plus size={28} />
       </button>
 
-      {/* タスクフォーム */}
-      {showForm && (
+      {/* タスクフォーム（通常タスク） */}
+      {formMode === 'task' && (
         <TaskForm
           initial={editingTask ?? undefined}
           initialParent={initialParent}
           allTasks={tasks}
           colors={colors}
           onSave={handleSave}
-          onCancel={() => { setShowForm(false); setEditingTask(null); setInitialParent(null) }}
+          onCancel={closeForm}
+        />
+      )}
+
+      {/* カテゴリーフォーム（シンプル） */}
+      {formMode === 'category' && (
+        <CategoryForm
+          initial={editingTask ?? undefined}
+          colors={colors}
+          onSave={handleSave}
+          onCancel={closeForm}
         />
       )}
     </div>

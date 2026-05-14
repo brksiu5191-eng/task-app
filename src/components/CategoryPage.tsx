@@ -27,7 +27,7 @@ function CategoryNode({ task, allTasks, depth, onEdit, onDelete, onAddChild }: N
   return (
     <div>
       <div
-        className="flex items-center gap-2 group"
+        className="flex items-center gap-2"
         style={{ paddingLeft: depth * 20 }}
       >
         {/* 展開ボタン */}
@@ -55,8 +55,8 @@ function CategoryNode({ task, allTasks, depth, onEdit, onDelete, onAddChild }: N
           )}
         </div>
 
-        {/* アクションボタン（hover時） */}
-        <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        {/* アクションボタン */}
+        <div className="flex gap-0.5 shrink-0">
           <button
             onClick={() => onAddChild(task)}
             className="w-7 h-7 flex items-center justify-center hover:bg-indigo-50 rounded-lg text-gray-400 hover:text-indigo-500 transition-colors text-base font-bold"
